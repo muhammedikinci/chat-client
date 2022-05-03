@@ -1,6 +1,6 @@
 <script>
   import { login } from './api'
-  import { setToken } from './storage'
+  import { setToken, setUsername } from './storage'
 
   export let activeScreen
   let username = ""
@@ -18,6 +18,7 @@
       message = response.message
     } else if (response.token) {
       setToken(response.token)
+      setUsername(username)
       activeScreen = "chat"
     }
   }

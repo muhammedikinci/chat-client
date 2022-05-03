@@ -1,10 +1,14 @@
 <script>
   import io from 'socket.io-client'
-  import { getToken } from './storage'
+  import { getToken, getUsername } from './storage'
 
-  const socket = io("http://localhost:8292", {
+  const username = getUsername()
+
+  const socket = io("http://localhost:8291", {
     query: { token: getToken() }
   })
+
+  let currentMessenger = ""
 
   let messages = []
   let message = ''
@@ -14,8 +18,17 @@
     users = data
   })
 
-  socket.on('messageChannel', (data) => {
-    messages = [...messages, data]
+  socket.on('getMessage', (data) => {
+    if (data.username == username) {
+      messages = [...messages, { content: data.message, isSender: true }]
+    } else if (data.username == currentMessenger) {
+      messages = [...messages, { content: data.message, isSender: false }]
+    }
+  })
+
+  socket.on("getConversation", (data) => {
+    console.log(data)
+    messages = data
   })
 
   socket.on("connect_error", (error) => {
@@ -23,21 +36,39 @@
   })
 
   function sendMessage() {
-    socket.emit('messageChannel', message)
+    socket.emit('sendMessage', message)
     message = ''
+  }
+
+  function startMessaging(username) {
+    currentMessenger = username
+
+    socket.emit('getConversation', currentMessenger)
   }
 </script>
 
 <div class="flex flex-col w-5/12 bg-slate-200 px-8 py-8 rounded-lg">
   <h1 class="mb-4 font-bold text-4xl text-center">Chat</h1>
-  <div class="w-full mb-4 bg-gray-300 rounded-md px-4 py-4">
-    {#each users as user}
-      {user.isActive ? "active" : "passive"}
-      <div class="px-4 py-2 mb-2 bg-pink-700 rounded-md font-semibold text-gray-50 w-fit">{user.username}</div>
-    {/each}
-    {#each messages as message}
-      <div class="px-4 py-2 mb-2 bg-pink-700 rounded-md font-semibold text-gray-50 w-fit">{message}</div>
-    {/each}
+  <div class="grid grid-cols-4">
+    <div class="col-span-3 mb-4 mr-2 bg-slate-300 rounded-md px-4 py-4">
+      <div class="w-full text-center rounded-md bg-slate-200 mb-2">Messages with {currentMessenger}</div>
+      {#each messages as message}
+        {#if message.isSender}
+          <div class="px-4 py-2 mb-2 bg-lime-700 rounded-md font-semibold text-gray-50 w-fit">{message.content}</div>
+        {:else}
+          <div class="px-4 py-2 mb-2 bg-pink-700 rounded-md font-semibold text-gray-50 w-fit">{message.content}</div>
+        {/if}
+      {/each}
+    </div>
+    <div class="mb-4 bg-slate-300 rounded-md px-4 py-4">
+      <div class="w-full text-center rounded-md bg-slate-200 mb-2">Users</div>
+      {#each users.filter((u) => u.isActive && u.username != username) as user}
+        <div on:click={() => { startMessaging(user.username) }} class="px-2 py-1 mb-2 bg-lime-700 rounded-md font-semibold text-gray-50 w-content hover:bg-slate-600 hover:cursor-pointer">{user.username}</div>
+      {/each}
+      {#each users.filter((u) => !u.isActive) as user}
+        <div on:click={() => { startMessaging(user.username) }} class="px-2 py-1 mb-2 bg-pink-700 rounded-md font-semibold text-gray-50 w-content hover:bg-slate-600 hover:cursor-pointer">{user.username}</div>
+      {/each}
+    </div>
   </div>
   <div class="w-full flex">
     <input bind:value={message} class="rounded-md px-2 py-2 w-full border-0" placeholder="Message..." type="text">
