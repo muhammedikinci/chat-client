@@ -47,10 +47,10 @@
   }
 </script>
 
-<div class="flex flex-col w-5/12 bg-slate-200 px-8 py-8 rounded-lg">
+<div class="flex flex-col xl:w-8/12 lg:w-10/12 md:w-10/12 w-full bg-slate-200 px-8 py-8 rounded-lg">
   <h1 class="mb-4 font-bold text-4xl text-center">Chat</h1>
   <div class="grid grid-cols-4">
-    <div class="col-span-3 mb-4 mr-2 bg-slate-300 rounded-md px-4 py-4">
+    <div class="col-span-3 mb-4 mr-2 bg-slate-300 rounded-md px-4 py-4 max-h-96 overflow-auto">
       <div class="w-full text-center rounded-md bg-slate-200 mb-2">Messages with {currentMessenger}</div>
       {#each messages as message}
         {#if message.isSender}
@@ -60,7 +60,7 @@
         {/if}
       {/each}
     </div>
-    <div class="mb-4 bg-slate-300 rounded-md px-4 py-4">
+    <div class="mb-4 bg-slate-300 rounded-md px-4 py-4 max-h-96 overflow-auto">
       <div class="w-full text-center rounded-md bg-slate-200 mb-2">Users</div>
       {#each users.filter((u) => u.isActive && u.username != username) as user}
         <div on:click={() => { startMessaging(user.username) }} class="px-2 py-1 mb-2 bg-lime-700 rounded-md font-semibold text-gray-50 w-content hover:bg-slate-600 hover:cursor-pointer">{user.username}</div>
